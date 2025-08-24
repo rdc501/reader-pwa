@@ -11,45 +11,65 @@ if ('serviceWorker' in navigator) {
 }
 
 const urlInput = document.getElementById('urlInput');
-const urlDisplay = document.getElementById('urlDisplay');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const articleContainer = document.getElementById('articleContainer');
+const articleTitle = document.getElementById('articleTitle');
+const articleContent = document.getElementById('articleContent');
 
 let timeout = null;
 
+const processUrl = async () => {
+    const url = urlInput.value;
+    if (url) {
+        loadingSpinner.style.display = 'block'; // Show spinner
+        try {
+            // Using a proxy to bypass CORS issues for fetching external content
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            const html = data.contents; // allorigins returns content in the 'contents' field
+
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            let article = new Readability(doc).parse();
+
+            if (article) {
+                articleTitle.textContent = article.title;
+                articleTitle.style.display = 'block'; // Show title if parsing is successful
+                articleContent.innerHTML = article.content;
+                articleContainer.style.display = 'block';
+            } else {
+                articleTitle.style.display = 'none'; // Hide title if parsing fails
+                articleContent.textContent = 'Failed to parse article content.';
+                articleContainer.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error fetching or parsing the URL:', error);
+            articleTitle.style.display = 'none'; // Hide title on fetch/parse error
+            articleContent.textContent = 'Error fetching or parsing the URL.';
+            articleContainer.style.display = 'block';
+        } finally {
+            loadingSpinner.style.display = 'none'; // Hide spinner after fetch completes or fails
+        }
+    } else {
+        articleContainer.style.display = 'none';
+        articleTitle.textContent = '';
+        articleContent.innerHTML = '';
+    }
+};
+
 urlInput.addEventListener('input', () => {
     clearTimeout(timeout);
-    timeout = setTimeout(async () => {
-        urlDisplay.textContent = urlInput.value;
-        const url = urlInput.value;
-        if (url) {
-            try {
-                // Using a proxy to bypass CORS issues for fetching external content
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                const html = data.contents; // allorigins returns content in the 'contents' field
+    articleContainer.style.display = 'none'; // Hide previous article content
+    loadingSpinner.style.display = 'none'; // Hide spinner on new input
+    articleTitle.textContent = '';
+    articleContent.innerHTML = '';
 
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                let article = new Readability(doc).parse();
+    timeout = setTimeout(processUrl, 2000);
+});
 
-                if (article) {
-                    document.getElementById('articleTitle').textContent = article.title;
-                    document.getElementById('articleContent').innerHTML = article.content;
-                    document.getElementById('articleContainer').style.display = 'block';
-                } else {
-                    document.getElementById('articleTitle').textContent = '';
-                    document.getElementById('articleContent').textContent = 'Failed to parse article content.';
-                    document.getElementById('articleContainer').style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error fetching or parsing the URL:', error);
-                document.getElementById('articleTitle').textContent = '';
-                document.getElementById('articleContent').textContent = 'Error fetching or parsing the URL.';
-                document.getElementById('articleContainer').style.display = 'block';
-            }
-        } else {
-            document.getElementById('articleContainer').style.display = 'none';
-            document.getElementById('articleTitle').textContent = '';
-            document.getElementById('articleContent').textContent = '';
-        }
-    }, 2000);
+urlInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        clearTimeout(timeout);
+        processUrl();
+    }
 });
