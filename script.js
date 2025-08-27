@@ -16,6 +16,7 @@ const articleContainer = document.getElementById('articleContainer');
 const articleTitle = document.getElementById('articleTitle');
 const articleContent = document.getElementById('articleContent');
 const savedArticlesList = document.getElementById('savedArticlesList');
+const fileInput = document.getElementById('fileInput');
 
 let timeout = null;
 
@@ -108,6 +109,33 @@ const processUrl = async () => {
         articleContainer.style.display = 'none';
         articleTitle.textContent = '';
         articleContent.innerHTML = '';
+    }
+};
+
+fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const fileContent = e.target.result;
+            processFile(file.name, fileContent);
+        };
+        reader.readAsText(file);
+    }
+});
+
+const processFile = (fileName, content) => {
+    loadingSpinner.style.display = 'block';
+    try {
+        // Directly save the file content without parsing
+        const article = { title: fileName, content: content, url: `file://${fileName}` };
+        // Removed saveArticle(article); as per user request
+    } catch (error) {
+        console.error('Error handling file:', error);
+        articleTitle.textContent = 'Error handling file.';
+        articleContainer.style.display = 'block';
+    } finally {
+        loadingSpinner.style.display = 'none';
     }
 };
 
