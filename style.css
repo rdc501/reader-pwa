@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: sans-serif;
     margin: 0;
@@ -68,6 +72,14 @@ h1 {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+    .tabs {
+        width: 80%;
+        margin: 20px auto;
+        border: none;
+    }
+    .tab-button {
+        flex: 1;
+    }
     #articleContent img {
         display: none;
     }
