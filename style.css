@@ -70,21 +70,6 @@ h1 {
     color: #34495e;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .tabs {
-        width: 80%;
-        margin: 20px auto;
-        border: none;
-    }
-    .tab-button {
-        flex: 1;
-    }
-    #articleContent img {
-        display: none;
-    }
-}
-
 /* Styling for Saved Articles */
 .saved-articles {
     width: 80%;
@@ -228,4 +213,25 @@ h1 {
     color: #666666;
     cursor: not-allowed;
     border-color: #cccccc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tabs {
+        width: 95%;
+        margin: 20px auto;
+        border: none;
+    }
+    .tab-button {
+        flex: 1;
+    }
+    #articleContent img {
+        display: none;
+    }
+    .saved-articles,
+    #articleContainer,
+    #urlInput,
+    #fileInput {
+        width: 95%;
+    }
 }
