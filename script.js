@@ -15,8 +15,66 @@ const loadingSpinner = document.getElementById('loadingSpinner');
 const articleContainer = document.getElementById('articleContainer');
 const articleTitle = document.getElementById('articleTitle');
 const articleContent = document.getElementById('articleContent');
+const savedArticlesList = document.getElementById('savedArticlesList');
 
 let timeout = null;
+
+const saveArticle = (article) => {
+    let articles = JSON.parse(localStorage.getItem('savedArticles')) || [];
+    // Check if article with same title or URL already exists
+    const exists = articles.some(a => a.url === article.url || a.title === article.title);
+    if (!exists) {
+        articles.push(article);
+        localStorage.setItem('savedArticles', JSON.stringify(articles));
+        displaySavedArticles();
+    }
+};
+
+const deleteArticle = (urlToDelete) => {
+    let articles = JSON.parse(localStorage.getItem('savedArticles')) || [];
+    articles = articles.filter(article => article.url !== urlToDelete);
+    localStorage.setItem('savedArticles', JSON.stringify(articles));
+    displaySavedArticles();
+    // Optionally, hide the article container if the deleted article was currently displayed
+    if (articleContainer.style.display === 'block' && articleTitle.textContent === urlToDelete) {
+        articleContainer.style.display = 'none';
+        articleTitle.textContent = '';
+        articleContent.innerHTML = '';
+    }
+};
+
+const displaySavedArticles = () => {
+    savedArticlesList.innerHTML = ''; // Clear current list
+    let articles = JSON.parse(localStorage.getItem('savedArticles')) || [];
+    articles.forEach(article => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#'; // Or a specific link to view the saved article
+        a.textContent = article.title;
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Optionally, load and display the saved article content
+            articleTitle.textContent = article.title;
+            articleContent.innerHTML = article.content;
+            articleContainer.style.display = 'block';
+        });
+        li.appendChild(a);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.classList.add('delete-button'); // Add a class for styling
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent the article link from being clicked
+            deleteArticle(article.url);
+        });
+        li.appendChild(deleteButton);
+
+        savedArticlesList.appendChild(li);
+    });
+};
+
+// Load saved articles on startup
+document.addEventListener('DOMContentLoaded', displaySavedArticles);
 
 const processUrl = async () => {
     const url = urlInput.value;
@@ -34,19 +92,15 @@ const processUrl = async () => {
 
             if (article) {
                 articleTitle.textContent = article.title;
-                articleTitle.style.display = 'block'; // Show title if parsing is successful
-                articleContent.innerHTML = article.content;
-                articleContainer.style.display = 'block';
+                saveArticle({ title: article.title, content: article.content, url: url }); // Save article
             } else {
                 articleTitle.style.display = 'none'; // Hide title if parsing fails
                 articleContent.textContent = 'Failed to parse article content.';
-                articleContainer.style.display = 'block';
             }
         } catch (error) {
             console.error('Error fetching or parsing the URL:', error);
             articleTitle.style.display = 'none'; // Hide title on fetch/parse error
             articleContent.textContent = 'Error fetching or parsing the URL.';
-            articleContainer.style.display = 'block';
         } finally {
             loadingSpinner.style.display = 'none'; // Hide spinner after fetch completes or fails
         }
