@@ -17,8 +17,39 @@ const articleTitle = document.getElementById('articleTitle');
 const articleContent = document.getElementById('articleContent');
 const savedArticlesList = document.getElementById('savedArticlesList');
 const fileInput = document.getElementById('fileInput');
+const listArticlesSpinner = document.getElementById('listArticlesSpinner'); // New spinner
 
 let timeout = null;
+
+// Tab switching logic
+document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', () => {
+        const tabId = button.dataset.tab;
+        
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        document.getElementById(tabId).classList.add('active');
+        button.classList.add('active');
+
+        // Specific actions for each tab
+        if (tabId === 'listArticles') {
+            displaySavedArticles();
+        } else if (tabId === 'viewArticle') {
+            // Optionally hide articleContainer if nothing is selected to view
+            // articleContainer.style.display = 'none';
+        }
+    });
+});
+
+// Initialize with the first tab active
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('.tab-button[data-tab="addArticle"]').click();
+});
 
 const saveArticle = (article) => {
     let articles = JSON.parse(localStorage.getItem('savedArticles')) || [];
@@ -35,7 +66,7 @@ const saveArticle = (article) => {
         }
     }
     localStorage.setItem('savedArticles', JSON.stringify(articles));
-    displaySavedArticles();
+    // displaySavedArticles(); // This will be called when the List Articles tab is activated
 };
 
 const deleteArticle = (urlToDelete) => {
@@ -44,7 +75,7 @@ const deleteArticle = (urlToDelete) => {
     localStorage.setItem('savedArticles', JSON.stringify(articles));
     displaySavedArticles();
     // Optionally, hide the article container if the deleted article was currently displayed
-    if (articleContainer.style.display === 'block' && articleTitle.textContent === urlToDelete) {
+    if (articleTitle.dataset.url === urlToDelete) {
         articleContainer.style.display = 'none';
         articleTitle.textContent = '';
         articleContent.innerHTML = '';
@@ -61,8 +92,10 @@ const displaySavedArticles = () => {
         a.textContent = article.title;
         a.addEventListener('click', (e) => {
             e.preventDefault();
-            // Optionally, load and display the saved article content
+            // Switch to viewArticle tab and display the article
+            document.querySelector('.tab-button[data-tab="viewArticle"]').click();
             articleTitle.textContent = article.title;
+            articleTitle.dataset.url = article.url; // Store URL for potential deletion handling
             articleContent.innerHTML = article.content;
             articleContainer.style.display = 'block';
         });
@@ -71,7 +104,7 @@ const displaySavedArticles = () => {
         if (!article.downloaded) {
             const downloadButton = document.createElement('button');
             downloadButton.textContent = 'Download';
-            downloadButton.classList.add('download-button'); // Removed green-button class
+            downloadButton.classList.add('download-button');
             downloadButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 await downloadArticle(article);
@@ -81,16 +114,16 @@ const displaySavedArticles = () => {
 
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.classList.add('delete-button'); // Add a class for styling
+        deleteButton.classList.add('delete-button');
         deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent the article link from being clicked
+            e.stopPropagation();
             deleteArticle(article.url);
         });
         li.appendChild(deleteButton);
 
         const openButton = document.createElement('button');
         openButton.textContent = 'Open';
-        openButton.classList.add('open-button'); // Add a class for styling
+        openButton.classList.add('open-button');
         openButton.addEventListener('click', (e) => {
             e.stopPropagation();
             window.open(article.url, '_blank');
@@ -101,36 +134,42 @@ const displaySavedArticles = () => {
     });
 };
 
-// Load saved articles on startup
-document.addEventListener('DOMContentLoaded', displaySavedArticles);
+// Load saved articles on startup - now handled by tab switching
+// document.addEventListener('DOMContentLoaded', displaySavedArticles);
 
 const processUrl = async (existingArticle = null) => {
     const url = existingArticle ? existingArticle.url : urlInput.value;
     if (url) {
-        loadingSpinner.style.display = 'block'; // Show spinner
+        loadingSpinner.style.display = 'block';
+        listArticlesSpinner.style.display = 'block'; // Show listArticlesSpinner
         try {
-            // Using a proxy to bypass CORS issues for fetching external content
             const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
             const response = await fetch(proxyUrl);
             const data = await response.json();
-            const html = data.contents; // allorigins returns content in the 'contents' field
+            const html = data.contents;
 
             const doc = new DOMParser().parseFromString(html, 'text/html');
             let article = new Readability(doc).parse();
 
             if (article) {
                 articleTitle.textContent = article.title;
-                saveArticle({ ...existingArticle, title: article.title, content: article.content, url: url, downloaded: true }); // Save or update article
+                articleTitle.dataset.url = url; // Store URL
+                articleContent.innerHTML = article.content;
+                articleContainer.style.display = 'block';
+                saveArticle({ ...existingArticle, title: article.title, content: article.content, url: url, downloaded: true });
             } else {
-                articleTitle.style.display = 'none'; // Hide title if parsing fails
+                articleTitle.style.display = 'none';
                 articleContent.textContent = 'Failed to parse article content.';
             }
         } catch (error) {
             console.error('Error fetching or parsing the URL:', error);
-            articleTitle.style.display = 'none'; // Hide title on fetch/parse error
+            articleTitle.style.display = 'none';
             articleContent.textContent = 'Error fetching or parsing the URL.';
         } finally {
-            loadingSpinner.style.display = 'none'; // Hide spinner after fetch completes or fails
+            loadingSpinner.style.display = 'none';
+            listArticlesSpinner.style.display = 'none'; // Hide listArticlesSpinner
+            // Switch to viewArticle tab after processing URL
+            document.querySelector('.tab-button[data-tab="viewArticle"]').click();
         }
     } else {
         articleContainer.style.display = 'none';
@@ -153,19 +192,22 @@ fileInput.addEventListener('change', (event) => {
 
 const processFile = (fileName, content) => {
     loadingSpinner.style.display = 'block';
+    listArticlesSpinner.style.display = 'block'; // Show listArticlesSpinner
     try {
         Papa.parse(content, {
-            header: true, // Assuming the first row contains headers like 'title' and 'url'
+            header: true,
             skipEmptyLines: true,
             complete: (results) => {
                 const articlesToSave = results.data
-                    .filter(row => row.title && row.url) // Filter out rows missing title or URL
+                    .filter(row => row.title && row.url)
                     .map(row => ({
                         title: row.title,
                         url: row.url,
-                        downloaded: false // New property
+                        downloaded: false
                     }));
                 articlesToSave.forEach(article => saveArticle(article));
+                // After processing file, switch to listArticles tab
+                document.querySelector('.tab-button[data-tab="listArticles"]').click();
             }
         });
     } catch (error) {
@@ -174,13 +216,15 @@ const processFile = (fileName, content) => {
         articleContainer.style.display = 'block';
     } finally {
         loadingSpinner.style.display = 'none';
+        listArticlesSpinner.style.display = 'none'; // Hide listArticlesSpinner
     }
 };
 
 urlInput.addEventListener('input', () => {
     clearTimeout(timeout);
-    articleContainer.style.display = 'none'; // Hide previous article content
-    loadingSpinner.style.display = 'none'; // Hide spinner on new input
+    articleContainer.style.display = 'none';
+    loadingSpinner.style.display = 'none';
+    listArticlesSpinner.style.display = 'none'; // Hide listArticlesSpinner
     articleTitle.textContent = '';
     articleContent.innerHTML = '';
 
@@ -198,12 +242,17 @@ const clearAllArticles = () => {
     if (confirm('Are you sure you want to clear all saved articles? This action cannot be undone.')) {
         localStorage.removeItem('savedArticles');
         displaySavedArticles();
+        // If on viewArticle tab and no articles, hide article container
+        if (document.querySelector('.tab-button[data-tab="viewArticle"]').classList.contains('active')) {
+            articleContainer.style.display = 'none';
+            articleTitle.textContent = '';
+            articleContent.innerHTML = '';
+        }
     }
 };
 
 document.getElementById('clearArticlesButton').addEventListener('click', clearAllArticles);
 
 const downloadArticle = async (articleToDownload) => {
-    // Call processUrl with the existing article to update it
     await processUrl(articleToDownload);
 };

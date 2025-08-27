@@ -10,23 +10,39 @@
 </head>
 <body>
     <h1>reader</h1>
-    <div>
-        <input type="url" id="urlInput" placeholder="Enter URL here">
+
+    <div class="tabs">
+        <button class="tab-button active" data-tab="addArticle">Add Article</button>
+        <button class="tab-button" data-tab="listArticles">List Articles</button>
+        <button class="tab-button" data-tab="viewArticle">View Article</button>
     </div>
-    <div>
-        <input type="file" id="fileInput" accept=".html,.txt">
+
+    <div id="addArticle" class="tab-content active">
+        <div>
+            <input type="url" id="urlInput" placeholder="Enter URL here">
+        </div>
+        <div>
+            <input type="file" id="fileInput" accept=".html,.txt">
+        </div>
+        <button id="clearArticlesButton">Clear All Articles</button>
     </div>
-    <button id="clearArticlesButton">Clear All Articles</button>
-    <div id="savedArticles" class="saved-articles">
-        <h2>Saved Articles</h2>
-        <ul id="savedArticlesList">
-            <!-- Saved articles will be loaded here -->
-        </ul>
+
+    <div id="listArticles" class="tab-content">
+        <div id="savedArticles" class="saved-articles">
+            <h2>Saved Articles</h2>
+            <ul id="savedArticlesList">
+                <!-- Saved articles will be loaded here -->
+            </ul>
+            <div id="listArticlesSpinner" class="spinner"></div>
+        </div>
     </div>
-    <div id="loadingSpinner" class="spinner"></div>
-    <div id="articleContainer">
-        <h2 id="articleTitle"></h2>
-        <div id="articleContent"></div>
+
+    <div id="viewArticle" class="tab-content">
+        <div id="loadingSpinner" class="spinner"></div>
+        <div id="articleContainer">
+            <h2 id="articleTitle"></h2>
+            <div id="articleContent"></div>
+        </div>
     </div>
     <script src="readability.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
