@@ -18,6 +18,7 @@ const articleContent = document.getElementById('articleContent');
 const savedArticlesList = document.getElementById('savedArticlesList');
 const fileInput = document.getElementById('fileInput');
 const listArticlesSpinner = document.getElementById('listArticlesSpinner'); // New spinner
+const viewArticleTabButton = document.querySelector('.tab-button[data-tab="viewArticle"]'); // New: Reference to View Article tab button
 
 let timeout = null;
 
@@ -46,9 +47,11 @@ document.querySelectorAll('.tab-button').forEach(button => {
     });
 });
 
-// Initialize with the first tab active
+// Initialize with the first tab active and disable View Article tab
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.tab-button[data-tab="addArticle"]').click();
+    viewArticleTabButton.disabled = true; // Disable the button
+    viewArticleTabButton.classList.add('disabled'); // Add a class for styling
 });
 
 const saveArticle = (article) => {
@@ -79,6 +82,8 @@ const deleteArticle = (urlToDelete) => {
         articleContainer.style.display = 'none';
         articleTitle.textContent = '';
         articleContent.innerHTML = '';
+        viewArticleTabButton.disabled = true; // Disable the button
+        viewArticleTabButton.classList.add('disabled'); // Add disabled class
     }
 };
 
@@ -92,8 +97,13 @@ const displaySavedArticles = () => {
         a.textContent = article.title;
         a.addEventListener('click', (e) => {
             e.preventDefault();
+            // Enable the button before clicking it to ensure tab switching works
+            viewArticleTabButton.disabled = false; // Enable the button
+            viewArticleTabButton.classList.remove('disabled'); // Remove disabled class
+            
             // Switch to viewArticle tab and display the article
             document.querySelector('.tab-button[data-tab="viewArticle"]').click();
+            
             articleTitle.textContent = article.title;
             articleTitle.dataset.url = article.url; // Store URL for potential deletion handling
             articleContent.innerHTML = article.content;
@@ -157,6 +167,8 @@ const processUrl = async (existingArticle = null) => {
                 articleContent.innerHTML = article.content;
                 articleContainer.style.display = 'block';
                 saveArticle({ ...existingArticle, title: article.title, content: article.content, url: url, downloaded: true });
+                viewArticleTabButton.disabled = false; // Enable the button
+                viewArticleTabButton.classList.remove('disabled'); // Remove disabled class
             } else {
                 articleTitle.style.display = 'none';
                 articleContent.textContent = 'Failed to parse article content.';
@@ -247,6 +259,8 @@ const clearAllArticles = () => {
             articleContainer.style.display = 'none';
             articleTitle.textContent = '';
             articleContent.innerHTML = '';
+            viewArticleTabButton.disabled = true; // Disable the button
+            viewArticleTabButton.classList.add('disabled'); // Add disabled class
         }
     }
 };

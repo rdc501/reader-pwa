@@ -210,3 +210,10 @@ h1 {
 .tab-content.active {
     display: block; /* Shown when active */
 }
+
+.tab-button.disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    border-color: #cccccc;
+}
