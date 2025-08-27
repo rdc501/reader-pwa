@@ -128,3 +128,20 @@ h1 {
 .delete-button:hover {
     background-color: #c82333;
 }
+
+#clearArticlesButton {
+    display: block;
+    width: fit-content;
+    margin: 20px auto;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+#clearArticlesButton:hover {
+    background-color: #c82333;
+}

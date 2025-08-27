@@ -22,13 +22,20 @@ let timeout = null;
 
 const saveArticle = (article) => {
     let articles = JSON.parse(localStorage.getItem('savedArticles')) || [];
-    // Check if article with same title or URL already exists
-    const exists = articles.some(a => a.url === article.url || a.title === article.title);
-    if (!exists) {
-        articles.push(article);
-        localStorage.setItem('savedArticles', JSON.stringify(articles));
-        displaySavedArticles();
+    const existingIndex = articles.findIndex(a => a.url === article.url);
+
+    if (existingIndex !== -1) {
+        // Update existing article
+        articles[existingIndex] = { ...articles[existingIndex], ...article };
+    } else {
+        // Add new article, checking for duplicates by title or URL
+        const exists = articles.some(a => a.url === article.url || a.title === article.title);
+        if (!exists) {
+            articles.push(article);
+        }
     }
+    localStorage.setItem('savedArticles', JSON.stringify(articles));
+    displaySavedArticles();
 };
 
 const deleteArticle = (urlToDelete) => {
@@ -61,6 +68,17 @@ const displaySavedArticles = () => {
         });
         li.appendChild(a);
 
+        if (!article.downloaded) {
+            const downloadButton = document.createElement('button');
+            downloadButton.textContent = 'Download';
+            downloadButton.classList.add('download-button');
+            downloadButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await downloadArticle(article);
+            });
+            li.appendChild(downloadButton);
+        }
+
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
         deleteButton.classList.add('delete-button'); // Add a class for styling
@@ -77,8 +95,8 @@ const displaySavedArticles = () => {
 // Load saved articles on startup
 document.addEventListener('DOMContentLoaded', displaySavedArticles);
 
-const processUrl = async () => {
-    const url = urlInput.value;
+const processUrl = async (existingArticle = null) => {
+    const url = existingArticle ? existingArticle.url : urlInput.value;
     if (url) {
         loadingSpinner.style.display = 'block'; // Show spinner
         try {
@@ -93,7 +111,7 @@ const processUrl = async () => {
 
             if (article) {
                 articleTitle.textContent = article.title;
-                saveArticle({ title: article.title, content: article.content, url: url }); // Save article
+                saveArticle({ ...existingArticle, title: article.title, content: article.content, url: url, downloaded: true }); // Save or update article
             } else {
                 articleTitle.style.display = 'none'; // Hide title if parsing fails
                 articleContent.textContent = 'Failed to parse article content.';
@@ -127,9 +145,20 @@ fileInput.addEventListener('change', (event) => {
 const processFile = (fileName, content) => {
     loadingSpinner.style.display = 'block';
     try {
-        // Directly save the file content without parsing
-        const article = { title: fileName, content: content, url: `file://${fileName}` };
-        // Removed saveArticle(article); as per user request
+        Papa.parse(content, {
+            header: true, // Assuming the first row contains headers like 'title' and 'url'
+            skipEmptyLines: true,
+            complete: (results) => {
+                const articlesToSave = results.data
+                    .filter(row => row.title && row.url) // Filter out rows missing title or URL
+                    .map(row => ({
+                        title: row.title,
+                        url: row.url,
+                        downloaded: false // New property
+                    }));
+                articlesToSave.forEach(article => saveArticle(article));
+            }
+        });
     } catch (error) {
         console.error('Error handling file:', error);
         articleTitle.textContent = 'Error handling file.';
@@ -155,3 +184,17 @@ urlInput.addEventListener('keydown', (event) => {
         processUrl();
     }
 });
+
+const clearAllArticles = () => {
+    if (confirm('Are you sure you want to clear all saved articles? This action cannot be undone.')) {
+        localStorage.removeItem('savedArticles');
+        displaySavedArticles();
+    }
+};
+
+document.getElementById('clearArticlesButton').addEventListener('click', clearAllArticles);
+
+const downloadArticle = async (articleToDownload) => {
+    // Call processUrl with the existing article to update it
+    await processUrl(articleToDownload);
+};
