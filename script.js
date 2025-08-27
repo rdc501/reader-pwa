@@ -71,7 +71,7 @@ const displaySavedArticles = () => {
         if (!article.downloaded) {
             const downloadButton = document.createElement('button');
             downloadButton.textContent = 'Download';
-            downloadButton.classList.add('download-button');
+            downloadButton.classList.add('download-button'); // Removed green-button class
             downloadButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 await downloadArticle(article);
@@ -87,6 +87,15 @@ const displaySavedArticles = () => {
             deleteArticle(article.url);
         });
         li.appendChild(deleteButton);
+
+        const openButton = document.createElement('button');
+        openButton.textContent = 'Open';
+        openButton.classList.add('open-button'); // Add a class for styling
+        openButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.open(article.url, '_blank');
+        });
+        li.appendChild(openButton);
 
         savedArticlesList.appendChild(li);
     });

@@ -129,6 +129,36 @@ h1 {
     background-color: #c82333;
 }
 
+.download-button {
+    margin-left: 15px; /* Increased spacing from the title */
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    background-color: #28a745; /* Green color */
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.download-button:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+.open-button {
+    background-color: #007bff; /* Blue color */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 0.8em;
+}
+
+.open-button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
 #clearArticlesButton {
     display: block;
     width: fit-content;
