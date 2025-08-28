@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const saveArticle = (article) => {
+    console.log('Attempting to save article:', article);
     let articles = JSON.parse(localStorage.getItem('savedArticles')) || [];
     const existingIndex = articles.findIndex(a => a.url === article.url);
 
@@ -69,7 +70,8 @@ const saveArticle = (article) => {
         }
     }
     localStorage.setItem('savedArticles', JSON.stringify(articles));
-    // displaySavedArticles(); // This will be called when the List Articles tab is activated
+    console.log('Articles after saving:', articles);
+    displaySavedArticles(); // Add this line to refresh the list
 };
 
 const deleteArticle = (urlToDelete) => {
@@ -88,8 +90,10 @@ const deleteArticle = (urlToDelete) => {
 };
 
 const displaySavedArticles = () => {
+    console.log('Displaying saved articles...');
     savedArticlesList.innerHTML = ''; // Clear current list
     let articles = JSON.parse(localStorage.getItem('savedArticles')) || [];
+    console.log('Articles retrieved from localStorage:', articles);
     articles.forEach(article => {
         const li = document.createElement('li');
         const a = document.createElement('a');
@@ -111,6 +115,53 @@ const displaySavedArticles = () => {
         });
         li.appendChild(a);
 
+        const actionsDiv = document.createElement('div');
+        actionsDiv.classList.add('article-actions');
+        actionsDiv.style.display = 'none'; // Initially hidden
+
+        const toggleButton = document.createElement('button');
+        toggleButton.textContent = '...';
+        toggleButton.classList.add('article-actions-toggle');
+        li.appendChild(toggleButton);
+
+        toggleButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleButton.style.display = 'none';
+            a.style.display = 'none';
+            actionsDiv.style.display = 'flex';
+        });
+
+        const hideActionsAndShowTitle = () => {
+            actionsDiv.style.display = 'none';
+            a.style.display = 'inline'; // Or 'block' depending on desired display
+            toggleButton.style.display = 'inline-block'; // Or 'block'
+        };
+
+        // Delete Button
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.classList.add('delete-button');
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
+                deleteArticle(article.url);
+                hideActionsAndShowTitle(); // Revert display after action
+            }
+        });
+        actionsDiv.appendChild(deleteButton);
+
+        // Open Button
+        const openButton = document.createElement('button');
+        openButton.textContent = 'Open';
+        openButton.classList.add('open-button');
+        openButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.open(article.url, '_blank');
+            hideActionsAndShowTitle(); // Revert display after action
+        });
+        actionsDiv.appendChild(openButton);
+
+        // Download Button (conditional)
         if (!article.downloaded) {
             const downloadButton = document.createElement('button');
             downloadButton.textContent = 'Download';
@@ -118,28 +169,24 @@ const displaySavedArticles = () => {
             downloadButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 await downloadArticle(article);
+                hideActionsAndShowTitle(); // Revert display after action
             });
-            li.appendChild(downloadButton);
+            actionsDiv.appendChild(downloadButton);
         }
 
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.classList.add('delete-button');
-        deleteButton.addEventListener('click', (e) => {
+        // Close Button
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.classList.add('close-button');
+        closeButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            deleteArticle(article.url);
+            hideActionsAndShowTitle();
         });
-        li.appendChild(deleteButton);
+        actionsDiv.appendChild(closeButton);
 
-        const openButton = document.createElement('button');
-        openButton.textContent = 'Open';
-        openButton.classList.add('open-button');
-        openButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            window.open(article.url, '_blank');
-        });
-        li.appendChild(openButton);
+        // Removed Share button functionality
 
+        li.appendChild(actionsDiv);
         savedArticlesList.appendChild(li);
     });
 };
@@ -167,6 +214,7 @@ const processUrl = async (existingArticle = null) => {
                 articleContent.innerHTML = article.content;
                 articleContainer.style.display = 'block';
                 saveArticle({ ...existingArticle, title: article.title, content: article.content, url: url, downloaded: true });
+                displaySavedArticles(); // Add this line to refresh the list
                 viewArticleTabButton.disabled = false; // Enable the button
                 viewArticleTabButton.classList.remove('disabled'); // Remove disabled class
             } else {

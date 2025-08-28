@@ -94,6 +94,9 @@ h1 {
 
 #savedArticlesList li {
     padding: 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     border-bottom: 1px solid #eee;
 }
 
@@ -234,4 +237,43 @@ h1 {
     #fileInput {
         width: 95%;
     }
+}
+
+.article-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+    margin-left: auto; /* Push actions to the right */
+}
+
+.article-actions-toggle {
+    background-color: #f0f0f0; /* Light background */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-left: auto; /* Push toggle to the right */
+}
+
+.article-actions-toggle:hover {
+    background-color: #e0e0e0;
+}
+
+.close-button {
+    background-color: #6c757d; /* Grey color */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.close-button:hover {
+    background-color: #5a6268; /* Darker grey on hover */
+}
+
+#savedArticlesList li a {
+    margin-right: auto; /* Push title to the left */
 }
