@@ -157,7 +157,6 @@ const displaySavedArticles = () => {
         openButton.addEventListener('click', (e) => {
             e.stopPropagation();
             window.open(article.url, '_blank');
-            hideActionsAndShowTitle(); // Revert display after action
         });
         actionsDiv.appendChild(openButton);
 
