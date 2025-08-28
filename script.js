@@ -49,8 +49,8 @@ document.querySelectorAll('.tab-button').forEach(button => {
 
 // Initialize with the first tab active and disable View Article tab
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('.tab-button[data-tab="addArticle"]').click();
-    viewArticleTabButton.disabled = true; // Disable the button
+    document.querySelector('.tab-button[data-tab="listArticles"]').click();
+    viewArticleTabButton.disabled = true; // Initially disable View Article tab
     viewArticleTabButton.classList.add('disabled'); // Add a class for styling
 });
 
