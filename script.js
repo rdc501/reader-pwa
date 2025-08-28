@@ -155,8 +155,18 @@ const displaySavedArticles = () => {
         openButton.textContent = 'Open';
         openButton.classList.add('open-button');
         openButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            window.open(article.url, '_blank');
+            // Create a synthetic click event with ctrlKey set to true
+            const syntheticEvent = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+                ctrlKey: true // Simulate Ctrl+click to open in background
+            });
+            const link = document.createElement('a');
+            link.href = article.url;
+            link.target = '_blank';
+            link.dispatchEvent(syntheticEvent);
+            e.preventDefault(); // Prevent the default button click action
         });
         actionsDiv.appendChild(openButton);
 
